@@ -146,15 +146,19 @@ class FeignClientsRegistrar
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata metadata,
 			BeanDefinitionRegistry registry) {
+		// FeignClient 自定义配置类注册
 		registerDefaultConfiguration(metadata, registry);
+		// FeignClient 配置类注册
 		registerFeignClients(metadata, registry);
 	}
 
 	private void registerDefaultConfiguration(AnnotationMetadata metadata,
 			BeanDefinitionRegistry registry) {
+		// 检查 Spring 启动类上是否有 @EnableFeignClients 注解
 		Map<String, Object> defaultAttrs = metadata
 				.getAnnotationAttributes(EnableFeignClients.class.getName(), true);
 
+		// 如果有该注解的话， 则完成 Feign 框架相关的一些配置内容注册，包括 Decoder、Encoder、Contract等
 		if (defaultAttrs != null && defaultAttrs.containsKey("defaultConfiguration")) {
 			String name;
 			if (metadata.hasEnclosingClass()) {
@@ -177,11 +181,14 @@ class FeignClientsRegistrar
 		final Class<?>[] clients = attrs == null ? null
 				: (Class<?>[]) attrs.get("clients");
 		if (clients == null || clients.length == 0) {
+			// 获取到进行扫描的 Scanner
 			ClassPathScanningCandidateComponentProvider scanner = getScanner();
 			scanner.setResourceLoader(this.resourceLoader);
 			scanner.addIncludeFilter(new AnnotationTypeFilter(FeignClient.class));
+			// 获取待扫描的包
 			Set<String> basePackages = getBasePackages(metadata);
 			for (String basePackage : basePackages) {
+				// 将扫描到的带有 @FeignClient 的类添加到待处理列表中
 				candidateComponents.addAll(scanner.findCandidateComponents(basePackage));
 			}
 		}
@@ -191,6 +198,7 @@ class FeignClientsRegistrar
 			}
 		}
 
+		// 对扫描到的 FeignClient 进行处理
 		for (BeanDefinition candidateComponent : candidateComponents) {
 			if (candidateComponent instanceof AnnotatedBeanDefinition) {
 				// verify annotated class is an interface
@@ -206,6 +214,7 @@ class FeignClientsRegistrar
 				registerClientConfiguration(registry, name,
 						attributes.get("configuration"));
 
+				// 注册 Feign 客户端
 				registerFeignClient(registry, annotationMetadata, attributes);
 			}
 		}
@@ -224,6 +233,7 @@ class FeignClientsRegistrar
 		factoryBean.setName(name);
 		factoryBean.setContextId(contextId);
 		factoryBean.setType(clazz);
+		// 组装 BeanDefinition
 		BeanDefinitionBuilder definition = BeanDefinitionBuilder
 				.genericBeanDefinition(clazz, () -> {
 					factoryBean.setUrl(getUrl(beanFactory, attributes));
@@ -265,6 +275,7 @@ class FeignClientsRegistrar
 
 		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className,
 				qualifiers);
+		// 注册到 Spring 容器中
 		BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
 	}
 
@@ -421,10 +432,12 @@ class FeignClientsRegistrar
 
 	private void registerClientConfiguration(BeanDefinitionRegistry registry, Object name,
 			Object configuration) {
+		// 将自定义配置类包装成 FeignClientSpecification
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder
 				.genericBeanDefinition(FeignClientSpecification.class);
 		builder.addConstructorArgValue(name);
 		builder.addConstructorArgValue(configuration);
+		// 注册到容器
 		registry.registerBeanDefinition(
 				name + "." + FeignClientSpecification.class.getSimpleName(),
 				builder.getBeanDefinition());

@@ -96,6 +96,7 @@ public class FeignAutoConfiguration {
 	@Bean
 	public FeignContext feignContext() {
 		FeignContext context = new FeignContext();
+		// 将自定义配置类（Decoder、Encoder、Contract）放入 context 中
 		context.setConfigurations(this.configurations);
 		return context;
 	}

@@ -345,10 +345,14 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 
 	protected <T> T loadBalance(Feign.Builder builder, FeignContext context,
 			HardCodedTarget<T> target) {
+		// 从上下文中获取一个 Client，默认是LoadBalancerFeignClient。
+		// 它是在 FeignRibbonClientAutoConfiguration 这个自动装配类中，通过Import实现的，默认是 FeignBlockingLoadBalancerClient
 		Client client = getOptional(context, Client.class);
 		if (client != null) {
 			builder.client(client);
+			// Targeter 有两个实现，分别是 HystrixTargeter 、DefaultTargeter
 			Targeter targeter = get(context, Targeter.class);
+			// 创建代理实例
 			return targeter.target(this, builder, context, target);
 		}
 
@@ -357,6 +361,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	}
 
 	@Override
+	// 获取 FeignClient 的代理对象
 	public Object getObject() {
 		return getTarget();
 	}
@@ -367,11 +372,14 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	 * information
 	 */
 	<T> T getTarget() {
+		// 从 Spring 上下文中获取 FeignContext
 		FeignContext context = beanFactory != null
 				? beanFactory.getBean(FeignContext.class)
 				: applicationContext.getBean(FeignContext.class);
+		// 构建 Feign.Builder，填充 Decoder、Encoder、Contract 等
 		Feign.Builder builder = feign(context);
 
+		// 通过是否存在 URL，判断是否需要 LoadBalance
 		if (!StringUtils.hasText(url)) {
 
 			if (LOG.isInfoEnabled()) {
@@ -385,6 +393,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 				url = name;
 			}
 			url += cleanPath();
+			// 就是创建具有负载均衡功能的代理类
 			return (T) loadBalance(builder, context,
 					new HardCodedTarget<>(type, name, url));
 		}
@@ -412,6 +421,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			}
 			builder.client(client);
 		}
+		// 生成默认代理类
 		Targeter targeter = get(context, Targeter.class);
 		return (T) targeter.target(this, builder, context,
 				new HardCodedTarget<>(type, name, url));

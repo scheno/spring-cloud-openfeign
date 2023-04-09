@@ -27,7 +27,10 @@
 		<main.basedir>${basedir}</main.basedir>
 		<jackson.version>2.11.3</jackson.version>
 		<spring-cloud-commons.version>2.2.9.RELEASE</spring-cloud-commons.version>
-		<spring-cloud-netflix.version>2.2.9.RELEASE</spring-cloud-netflix.version>
+		<spring-cloud-netflix.version>
+
+
+			2.2.9.RELEASE</spring-cloud-netflix.version>
 
 		<!-- Plugin versions -->
 		<maven-eclipse-plugin.version>2.10</maven-eclipse-plugin.version>
